@@ -25,30 +25,35 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        super.doFilterInternal(request, response, chain);
         String header = request.getHeader("Authorization");
-        logger.info("doFilterInternal执行了:"+header);
 
-        if (header == null || !header.startsWith(JwtUtils.getAuthorizationHeaderPrefix())) {
+        if (header == null || !header.startsWith("Bearer ")) {
             chain.doFilter(request, response);
-            logger.info(" chain.doFilter(request, response)");
             return;
         }
-        UsernamePasswordAuthenticationToken authenticationToken = getUsernamePasswordAuthenticationToken(header);
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        chain.doFilter(request, response);
-    }
-    private UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(String token) {
-        String user = Jwts.parser()
-                .setSigningKey("PrivateSecret")
-                .parseClaimsJws(token.replace(JwtUtils.getAuthorizationHeaderPrefix(), ""))
-                .getBody()
-                .getSubject();
-        logger.info("---------------------:"+user);
-        if (null != user) {
-            return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
-        }
 
+        UsernamePasswordAuthenticationToken authentication = getAuthentication(request);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        chain.doFilter(request, response);
+
+    }
+    private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null) {
+            // parse the token.
+            String user = Jwts.parser()
+                    .setSigningKey("MyJwtSecret")
+                    .parseClaimsJws(token.replace(JwtUtils.getAuthorizationHeaderPrefix(), ""))
+                    .getBody()
+                    .getSubject();
+
+            if (user != null) {
+                return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+            }
+            return null;
+        }
         return null;
+
     }
 }

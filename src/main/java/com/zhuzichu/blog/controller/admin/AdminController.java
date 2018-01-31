@@ -21,12 +21,8 @@ private Logger logger = LoggerFactory.getILoggerFactory().getLogger(this.getClas
             return "admin/login";
     }
 
-    @PostMapping(value = "/actionLogin")
-    public String checkUser(@Valid User user, BindingResult bindingResult){
-        logger.info(""+user.toString());
-        if(bindingResult.hasErrors()){
-            return "admin/login";
-        }
-        return "admin/admin";
+    @RequestMapping(value = "/index")
+    public String index(){
+        return "admin/index";
     }
 }

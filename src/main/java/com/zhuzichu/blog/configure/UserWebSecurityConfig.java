@@ -2,6 +2,7 @@ package com.zhuzichu.blog.configure;
 
 import com.zhuzichu.blog.filter.JwtAuthenticationFilter;
 import com.zhuzichu.blog.filter.JwtLoginFilter;
+import com.zhuzichu.blog.service.CustomAuthenticationProvider;
 import com.zhuzichu.blog.service.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,16 +38,11 @@ public class UserWebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         logger.info("2222222222222222");
         //解决不允许显示在iframe的问题
-        http.headers().frameOptions().disable();
-        http    .csrf().disable()
+        http.cors().and().csrf().disable()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.GET, "/admin/login").permitAll()
                 .anyRequest()
                 .authenticated()
-                .and()
-                .formLogin()
-                .loginPage("/admin/login")
-                .permitAll()
                 .and()
                 .addFilter(new JwtLoginFilter(authenticationManager()))
                 .addFilter(new JwtAuthenticationFilter(authenticationManager()));
@@ -54,7 +50,8 @@ public class UserWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(detailsService).passwordEncoder(bCryptPasswordEncoder);
+//        auth.userDetailsService(detailsService).passwordEncoder(bCryptPasswordEncoder);
+        auth.authenticationProvider(new CustomAuthenticationProvider(detailsService,bCryptPasswordEncoder));
         super.configure(auth);
     }
 }
